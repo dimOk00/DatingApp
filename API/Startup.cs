@@ -27,11 +27,6 @@ namespace API
             services.AddCors();
             services.AddIdentityServices(_config);
             services.AddSignalR();
-            services.AddLogging(logging =>
-            {
-                logging.AddConsole();
-                logging.AddDebug();
-            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

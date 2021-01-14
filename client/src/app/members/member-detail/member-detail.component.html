@@ -9,6 +9,10 @@
                     Online now
                 </div>
                 <div>
+                    <strong>Name: </strong>
+                    <p>{{member.knownAs}}</p>
+                </div>
+                <div>
                     <strong>Location:</strong>
                     <p>{{member.city}}, {{member.country}}</p>
                 </div>
@@ -41,8 +45,6 @@
                 <p>{{member.introduction}}</p>
                 <h4>Looking for</h4>
                 <p>{{member.lookingFor}}</p>
-            </tab>
-            <tab heading='Interests' (selectTab)="onTabActivated($event)">
                 <h4>Interests</h4>
                 <p>{{member.interests}}</p>
             </tab>
