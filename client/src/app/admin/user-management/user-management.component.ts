@@ -3,6 +3,7 @@ import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
 import { RolesModalComponent } from 'src/app/modals/roles-modal/roles-modal.component';
 import { User } from 'src/app/_models/user';
 import { AdminService } from 'src/app/_services/admin.service';
+import { MembersService } from 'src/app/_services/members.service';
 
 @Component({
   selector: 'app-user-management',
@@ -11,11 +12,13 @@ import { AdminService } from 'src/app/_services/admin.service';
 })
 export class UserManagementComponent implements OnInit {
   users: Partial<User[]>;
+  currentUser: User;
   bsModalRef: BsModalRef;
 
-  constructor(private adminService: AdminService, private modalService: BsModalService) { }
+  constructor(private adminService: AdminService, private memberService: MembersService, private modalService: BsModalService) { }
 
   ngOnInit(): void {
+    this.currentUser = this.memberService.user;
     this.getUsersWithRoles();
   }
 
@@ -39,7 +42,7 @@ export class UserManagementComponent implements OnInit {
         roles: [...values.filter(el => el.checked === true).map(el => el.name)]
       };
 
-      if(rolesToUpdate){
+      if (rolesToUpdate) {
         this.adminService.updateUserRoles(user.username, rolesToUpdate.roles).subscribe(() => {
           user.roles = [...rolesToUpdate.roles]
         })
@@ -47,29 +50,36 @@ export class UserManagementComponent implements OnInit {
     })
   }
 
-  private getRolesArray(user: User){
+  deleteUser(user: User) {
+    this.adminService.deleteUser(user.username).subscribe(() => {
+      this.users = this.users.filter(x => x.username !== user.username);
+    })
+
+  }
+
+  private getRolesArray(user: User) {
     const roles = [];
     const userRoles = user.roles;
     const availableRoles: any[] = [
-      {name:'Admin', value:'Admin'},
-      {name:'Moderator', value:'Moderator'},
-      {name:'Member', value:'Member'},
+      { name: 'Admin', value: 'Admin' },
+      { name: 'Moderator', value: 'Moderator' },
+      { name: 'Member', value: 'Member' },
     ];
 
     availableRoles.forEach(role => {
       let isMatch = false;
-      for (const userRole of userRoles){
-        if(role.name === userRole){
+      for (const userRole of userRoles) {
+        if (role.name === userRole) {
           isMatch = true;
           role.checked = true;
           roles.push(role);
           break;
         }
       }
-      if(!isMatch){
+      if (!isMatch) {
         role.checked = false;
         roles.push(role);
-      }      
+      }
     })
     return roles;
   }

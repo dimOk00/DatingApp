@@ -6,10 +6,12 @@ using API.Entities;
 using API.Extensions;
 using API.Interfaces;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace API.SignalR
 {
+    [Authorize]
     public class MessageHub : Hub
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -134,7 +136,7 @@ namespace API.SignalR
             throw new HubException("Failed to remove from group");
         }
 
-        private string GetGroupName(string caller, string other)
+        private static string GetGroupName(string caller, string other)
         {
             var stringCompare = string.CompareOrdinal(caller, other) < 0;
             return stringCompare ? $"{caller}-{other}" : $"{other}-{caller}";

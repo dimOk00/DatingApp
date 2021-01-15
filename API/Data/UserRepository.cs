@@ -16,10 +16,12 @@ namespace API.Data
     {
         private readonly DataContext _context;
         private readonly IMapper _mapper;
+        private readonly IPhotoService _photoService;
 
-        public UserRepository(DataContext context, IMapper mapper)
+        public UserRepository(DataContext context, IMapper mapper, IPhotoService photoService)
         {
             _mapper = mapper;
+            _photoService = photoService;
             _context = context;
         }
 
@@ -82,6 +84,28 @@ namespace API.Data
         public void Update(AppUser user)
         {
             _context.Entry(user).State = EntityState.Modified;
+        }
+
+        public async Task DeletePhotos(AppUser appUser)
+        {
+            var userPhotos = await _context.Users.Include(x => x.Photos)
+                                       .Select(x => new { Username = x.UserName, x.Photos })
+                                       .FirstOrDefaultAsync(x => x.Username == appUser.UserName);
+
+            var photos = userPhotos?.Photos;
+
+            if (photos == null || photos.Count == 0)
+                return;
+
+            foreach (var photo in photos)
+            {
+                if (photo.PublicId == null)
+                    continue;
+                // TODO: Try to think what to do if photo was not deleted
+                await _photoService.DeletePhotoAsync(photo.PublicId);
+            }
+
+            _context.Photos.RemoveRange(photos);
         }
     }
 }

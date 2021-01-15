@@ -24,21 +24,45 @@ namespace API.Data
             return await _context.Likes.FindAsync(sourceUserId, likedUserId);
         }
 
+        private async Task<IEnumerable<UserLike>> GetUserLikes(AppUser user)
+        {
+            var likes = _context.Likes.AsQueryable();
+
+            likes = likes.Where(like => like.SourceUserId == user.Id || like.LikedUserId == user.Id);
+
+            return await likes.ToListAsync();
+        }
+
+        public async Task<bool> HasLikes(AppUser user)
+        {
+            var likes = _context.Likes.AsQueryable();
+
+            likes = likes.Where(like => like.SourceUserId == user.Id || like.LikedUserId == user.Id);
+
+            return await likes.AnyAsync();
+        }
+
+        public async Task DeleteLikes(AppUser user)
+        {
+            var likes = await GetUserLikes(user);
+            _context.Likes.RemoveRange(likes);
+        }
+
         public async Task<PagedList<LikeDto>> GetUserLikes(LikesParams likesParams)
         {
             var users = _context.Users.Include(p => p.Photos).OrderBy(u => u.UserName).AsQueryable();
             var likes = _context.Likes.AsQueryable();
 
-            if (likesParams.Predicate == "liked")
+            switch (likesParams.Predicate)
             {
-                likes = likes.Where(like => like.SourceUserId == likesParams.UserId);
-                users = likes.Select(like => like.LikedUser);
-            }
-
-            if (likesParams.Predicate == "likedBy")
-            {
-                likes = likes.Where(like => like.LikedUserId == likesParams.UserId);
-                users = likes.Select(like => like.SourceUser);
+                case "liked":
+                    likes = likes.Where(like => like.SourceUserId == likesParams.UserId);
+                    users = likes.Select(like => like.LikedUser);
+                    break;
+                case "likedBy":
+                    likes = likes.Where(like => like.LikedUserId == likesParams.UserId);
+                    users = likes.Select(like => like.SourceUser);
+                    break;
             }
 
             var likedUsers = users.Select(user => new LikeDto
@@ -59,6 +83,11 @@ namespace API.Data
             return await _context.Users
                 .Include(x => x.LikedUsers)
                 .FirstOrDefaultAsync(user => user.Id == userId);
+        }
+
+        public void RemoveConnection(Connection connection)
+        {
+            _context.Connections.Remove(connection);
         }
     }
 }

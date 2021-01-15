@@ -38,6 +38,21 @@ namespace API.Data
             _context.Messages.Remove(message);
         }
 
+        private async Task<IEnumerable<Message>> GetUserMessages(AppUser user)
+        {
+            var likes = _context.Messages.AsQueryable();
+
+            likes = likes.Where(like => like.SenderId == user.Id || like.RecipientId == user.Id);
+
+            return await likes.ToListAsync();
+        }
+
+        public async Task DeleteMessagesAsync(AppUser user)
+        {
+            var messages = await GetUserMessages(user);
+            _context.Messages.RemoveRange(messages);
+        }
+
         public async Task<Connection> GetConnection(string connectionId)
         {
             return await _context.Connections.FindAsync(connectionId);
@@ -99,12 +114,12 @@ namespace API.Data
 
             var unreadMessages = messages.Where(m => m.DateRead == null && m.RecipientUsername == currentUsername).ToList();
 
-            if (unreadMessages.Any())
+            if (!unreadMessages.Any()) 
+                return messages;
+            
+            foreach (var message in unreadMessages)
             {
-                foreach (var message in unreadMessages)
-                {
-                    message.DateRead = DateTime.UtcNow;
-                }
+                message.DateRead = DateTime.UtcNow;
             }
 
             return messages;

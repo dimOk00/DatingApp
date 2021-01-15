@@ -2,13 +2,18 @@
     <table class="table">
         <tr>
             <th style="width: 30%;">Username</th>
-            <th style="width: 40%;">Active roles</th>
             <th style="width: 30%;">Active roles</th>
+            <th style="width: 20%;">Edit roles</th>
+            <th style="width: 20%;">Delete user</th>
         </tr>
         <tr *ngFor="let user of users">
             <td>{{user.username}}</td>
             <td>{{user.roles}}</td>
             <td><button (click)="openRolesModal(user)" class="btn btn-info">Edit Roles</button></td>
+            <td><button [disabled]="user.roles.includes('Admin') || currentUser.username === user.username"
+                    (click)="deleteUser(user)" class="btn btn-danger">
+                    Delete
+                </button></td>
         </tr>
     </table>
 </div>
